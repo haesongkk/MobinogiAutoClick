@@ -6,4 +6,8 @@
   <ItemGroup>
     <Inf Include="MobinogiAutoClick.inf" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="start.bat" />
+    <None Include="end.bat" />
+  </ItemGroup>
 </Project>

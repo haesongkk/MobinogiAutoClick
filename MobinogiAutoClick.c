@@ -1,15 +1,153 @@
+// 
+// TODO: 실제 매크로를 구현하는 새 프로젝트 생성
+// 드라이버를 통해 마우스 입력을 받아온다
+// 인증서 등록 -> 드라이버 등록 -> <매크로> -> 드라이버 해제 -> 인증서 해제
+//
+// 마우스 위치는 독점 아마 못할 것...
+// 하지만 입력값도 커널을 통해 넣어야할 수 잇음
+//
+// sc query MobinogiAutoClick: 드라이버 추가 확인
+// bcdedit /set testsigning on(off): 테스트 드라이버 허용 모드 (재부팅 필요)
+// 
+// 테스트 모드보다는 직접 .sys.파일에 서명하고 
+// 컴퓨터에 인증서를 등록/해제하는 방식으로 진행하는게 좋을듯
+// 워터마크도 안 남고, 재부팅도 필요없고, 그냥 깔끔함
+// 
+
 #include <ntddk.h>
+#include <ntddmou.h>
 
-NTSTATUS
-DriverEntry(
-    _In_ PDRIVER_OBJECT  DriverObject,
-    _In_ PUNICODE_STRING RegistryPath
-)
-{
+// 원래 무슨 mouclass.h가 있었다는데 없어져서 따로 정의
+#define IOCTL_INTERNAL_MOUSE_CONNECT CTL_CODE(FILE_DEVICE_MOUSE, 0x0A, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+typedef struct _DEVICE_EXTENSION {
+    PDEVICE_OBJECT LowerDeviceObject;
+} DEVICE_EXTENSION, * PDEVICE_EXTENSION;
+
+typedef struct _CONNECT_DATA {
+    PDEVICE_OBJECT ClassDeviceObject;
+    PVOID ClassService;
+} CONNECT_DATA, * PCONNECT_DATA;
+
+typedef VOID(*PSERVICE_CALLBACK_ROUTINE)(
+    PDEVICE_OBJECT,
+    PMOUSE_INPUT_DATA,
+    ULONG,
+    PULONG
+    );
+
+// 마우스 콜백 저장용 전역 변수
+CONNECT_DATA g_OriginalConnect;
+
+// 마우스 입력 가로채는 후킹 함수
+VOID MouseServiceCallback(
+    PDEVICE_OBJECT DeviceObject,
+    PMOUSE_INPUT_DATA InputDataStart,
+    ULONG InputDataCount,
+    PULONG InputDataConsumed
+) {
+    for (ULONG i = 0; i < InputDataCount; i++) {
+        if (InputDataStart[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) {
+            KdPrint(("왼쪽 클릭 감지됨!\n"));
+        }
+        if (InputDataStart[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) {
+            KdPrint(("오른쪽 클릭 감지됨!\n"));
+        }
+    }
+
+    // 원래 마우스 서비스 호출
+    ((PSERVICE_CALLBACK_ROUTINE)g_OriginalConnect.ClassService)(
+        DeviceObject,
+        InputDataStart,
+        InputDataCount,
+        InputDataConsumed
+        );
+}
+
+// IRP_MJ_INTERNAL_DEVICE_CONTROL 처리 함수
+NTSTATUS DispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+    PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (stack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_MOUSE_CONNECT) {
+        KdPrint(("IOCTL_INTERNAL_MOUSE_CONNECT 감지됨\n"));
+
+        PCONNECT_DATA userConnect =
+            (PCONNECT_DATA)stack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+        // 원본 콜백 저장
+        g_OriginalConnect = *userConnect;
+
+        // 후킹
+        userConnect->ClassService = (PVOID)MouseServiceCallback;
+
+        KdPrint(("마우스 서비스 후킹 완료\n"));
+    }
+
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(((PDEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDeviceObject, Irp);
+}
+
+
+NTSTATUS AddDevice(
+    PDRIVER_OBJECT DriverObject,
+    PDEVICE_OBJECT PhysicalDeviceObject
+) {
+    NTSTATUS status;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PDEVICE_EXTENSION devExt;
+
+    // 필터 드라이버용 장치 생성
+    status = IoCreateDevice(
+        DriverObject,
+        sizeof(DEVICE_EXTENSION),
+        NULL,
+        FILE_DEVICE_MOUSE,
+        0,
+        FALSE,
+        &DeviceObject
+    );
+
+    if (!NT_SUCCESS(status)) {
+        KdPrint(("MobinogiAutoClick: IoCreateDevice failed: 0x%x\n", status));
+        return status;
+    }
+
+    // 하위 장치에 붙기
+    devExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    devExt->LowerDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+
+    DeviceObject->Flags |= DO_BUFFERED_IO;
+    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    KdPrint(("MobinogiAutoClick: AddDevice success!\n"));
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS DispatchPassThrough(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+    UNREFERENCED_PARAMETER(DeviceObject);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(DeviceObject, Irp);  // DeviceExtension 없이 호출 (안 붙은 상태니까)
+}
+
+VOID DriverUnload(PDRIVER_OBJECT DriverObject) {
     UNREFERENCED_PARAMETER(DriverObject);
-    UNREFERENCED_PARAMETER(RegistryPath);
+    KdPrint(("MobinogiAutoClick Driver Unloaded\n"));
+}
 
-    KdPrint(("MobinogiAutoClick Driver Loaded!\n"));
+NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath) {
+    UNREFERENCED_PARAMETER(RegistryPath);
+    
+    DriverObject->DriverExtension->AddDevice = AddDevice;
+    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalDeviceControl;
+
+    KdPrint(("MobinogiAutoClick Driver Loaded\n"));
+
+    for (int i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+        DriverObject->MajorFunction[i] = DispatchPassThrough;
+
+    DriverObject->DriverUnload = DriverUnload;
 
     return STATUS_SUCCESS;
 }
