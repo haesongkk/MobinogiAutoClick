@@ -3,4 +3,7 @@
   <ItemGroup>
     <ClCompile Include="MobinogiAutoClick.c" />
   </ItemGroup>
+  <ItemGroup>
+    <Inf Include="MobinogiAutoClick.inf" />
+  </ItemGroup>
 </Project>

@@ -1,11 +1,15 @@
 #include <ntddk.h>
 
-VOID DriverUnload(PDRIVER_OBJECT DriverObject) {
-    DbgPrint("Driver unloaded.\n");
-}
+NTSTATUS
+DriverEntry(
+    _In_ PDRIVER_OBJECT  DriverObject,
+    _In_ PUNICODE_STRING RegistryPath
+)
+{
+    UNREFERENCED_PARAMETER(DriverObject);
+    UNREFERENCED_PARAMETER(RegistryPath);
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath) {
-    DbgPrint("Driver loaded.\n");
-    DriverObject->DriverUnload = DriverUnload;
+    KdPrint(("MobinogiAutoClick Driver Loaded!\n"));
+
     return STATUS_SUCCESS;
 }
