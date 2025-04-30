@@ -1,5 +1,5 @@
 ;
-; MobinogiAutoClick.inf
+; MouseDriver.inf
 ;
 
 [Version]
@@ -7,7 +7,7 @@ Signature   = "$WINDOWS NT$"
 Class       = System ; TODO: specify appropriate Class
 ClassGuid   = {4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
 Provider    = %ManufacturerName%
-CatalogFile = MobinogiAutoClick.cat
+CatalogFile = MouseDriver.cat
 DriverVer   = ; TODO: set DriverVer in stampinf property pages
 PnpLockdown = 1
 
@@ -18,7 +18,7 @@ DefaultDestDir = 13
 1 = %DiskName%,,,""
 
 [SourceDisksFiles]
-MobinogiAutoClick.sys = 1,,
+MouseDriver.sys = 1,,
 
 ;*****************************************
 ; Install Section
@@ -28,35 +28,35 @@ MobinogiAutoClick.sys = 1,,
 %ManufacturerName% = Standard,NT$ARCH$.10.0...16299 ; %13% support introduced in build 16299
 
 [Standard.NT$ARCH$.10.0...16299]
-%MobinogiAutoClick.DeviceDesc% = MobinogiAutoClick_Device, Root\MobinogiAutoClick ; TODO: edit hw-id
+%MouseDriver.DeviceDesc% = MouseDriver_Device, Root\MouseDriver ; TODO: edit hw-id
 
-[MobinogiAutoClick_Device.NT]
+[MouseDriver_Device.NT]
 CopyFiles = File_Copy
 
 [File_Copy]
-MobinogiAutoClick.sys
+MouseDriver.sys
 
 ;-------------- Service installation
-[MobinogiAutoClick_Device.NT.Services]
-AddService = MobinogiAutoClick,%SPSVCINST_ASSOCSERVICE%, MobinogiAutoClick_Service_Inst
+[MouseDriver_Device.NT.Services]
+AddService = MouseDriver,%SPSVCINST_ASSOCSERVICE%, MouseDriver_Service_Inst
 
-; -------------- MobinogiAutoClick driver install sections
-[MobinogiAutoClick_Service_Inst]
-DisplayName    = %MobinogiAutoClick.SVCDESC%
+; -------------- MouseDriver driver install sections
+[MouseDriver_Service_Inst]
+DisplayName    = %MouseDriver.SVCDESC%
 ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
 StartType      = 3               ; SERVICE_DEMAND_START
 ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
-ServiceBinary  = %13%\MobinogiAutoClick.sys
+ServiceBinary  = %13%\MouseDriver.sys
 
-[MobinogiAutoClick_Device.NT.Wdf]
-KmdfService = MobinogiAutoClick, MobinogiAutoClick_wdfsect
+[MouseDriver_Device.NT.Wdf]
+KmdfService = MouseDriver, MouseDriver_wdfsect
 
-[MobinogiAutoClick_wdfsect]
+[MouseDriver_wdfsect]
 KmdfLibraryVersion = $KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE = 0x00000002
 ManufacturerName = "<Your manufacturer name>" ;TODO: Replace with your manufacturer name
-DiskName = "MobinogiAutoClick Installation Disk"
-MobinogiAutoClick.DeviceDesc = "MobinogiAutoClick Device"
-MobinogiAutoClick.SVCDESC = "MobinogiAutoClick Service"
+DiskName = "MouseDriver Installation Disk"
+MouseDriver.DeviceDesc = "MouseDriver Device"
+MouseDriver.SVCDESC = "MouseDriver Service"

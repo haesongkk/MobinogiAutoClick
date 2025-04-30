@@ -35,9 +35,40 @@ typedef VOID(*PSERVICE_CALLBACK_ROUTINE)(
     ULONG,
     PULONG
     );
+#define IOCTL_GET_CLICK_STATE CTL_CODE(FILE_DEVICE_UNKNOWN, 0x801, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 // 마우스 콜백 저장용 전역 변수
 CONNECT_DATA g_OriginalConnect;
+volatile BOOLEAN g_LastLeftClick = FALSE;
+
+NTSTATUS DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+    UNREFERENCED_PARAMETER(DeviceObject);  // <<< 이거 추가
+    PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS status = STATUS_SUCCESS;
+    ULONG outLen = 0;
+
+    if (stack->Parameters.DeviceIoControl.IoControlCode == IOCTL_GET_CLICK_STATE) {
+        if (stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(BOOLEAN)) {
+            status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else {
+            *(BOOLEAN*)Irp->AssociatedIrp.SystemBuffer = g_LastLeftClick;
+            g_LastLeftClick = FALSE;  // 한 번 응답 후 리셋
+            outLen = sizeof(BOOLEAN);
+        }
+    }
+    else {
+        status = STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    Irp->IoStatus.Status = status;
+    Irp->IoStatus.Information = outLen;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return status;
+}
+
+
+
 
 // 마우스 입력 가로채는 후킹 함수
 VOID MouseServiceCallback(
@@ -49,9 +80,7 @@ VOID MouseServiceCallback(
     for (ULONG i = 0; i < InputDataCount; i++) {
         if (InputDataStart[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) {
             KdPrint(("왼쪽 클릭 감지됨!\n"));
-        }
-        if (InputDataStart[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) {
-            KdPrint(("오른쪽 클릭 감지됨!\n"));
+            g_LastLeftClick = TRUE;  // ← 클릭 여부 저장
         }
     }
 
@@ -62,7 +91,11 @@ VOID MouseServiceCallback(
         InputDataCount,
         InputDataConsumed
         );
+
+
 }
+
+
 
 // IRP_MJ_INTERNAL_DEVICE_CONTROL 처리 함수
 NTSTATUS DispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
@@ -96,11 +129,16 @@ NTSTATUS AddDevice(
     PDEVICE_OBJECT DeviceObject = NULL;
     PDEVICE_EXTENSION devExt;
 
+    UNICODE_STRING usDosDeviceName, usDeviceName;
+
+    RtlInitUnicodeString(&usDeviceName, L"\\Device\\MobinogiAutoClick");
+    RtlInitUnicodeString(&usDosDeviceName, L"\\DosDevices\\MobinogiAutoClick");
+
     // 필터 드라이버용 장치 생성
     status = IoCreateDevice(
         DriverObject,
         sizeof(DEVICE_EXTENSION),
-        NULL,
+        &usDeviceName,
         FILE_DEVICE_MOUSE,
         0,
         FALSE,
@@ -112,6 +150,8 @@ NTSTATUS AddDevice(
         return status;
     }
 
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchDeviceControl;
+
     // 하위 장치에 붙기
     devExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     devExt->LowerDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
@@ -120,6 +160,14 @@ NTSTATUS AddDevice(
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     KdPrint(("MobinogiAutoClick: AddDevice success!\n"));
+
+    status = IoCreateSymbolicLink(&usDosDeviceName, &usDeviceName);
+    if (!NT_SUCCESS(status)) {
+        KdPrint(("MobinogiAutoClick: Symbolic link creation failed: 0x%x\n", status));
+        IoDeleteDevice(DeviceObject);
+        return status;
+    }
+
 
     return STATUS_SUCCESS;
 }
@@ -138,7 +186,7 @@ VOID DriverUnload(PDRIVER_OBJECT DriverObject) {
 
 NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath) {
     UNREFERENCED_PARAMETER(RegistryPath);
-    
+
     DriverObject->DriverExtension->AddDevice = AddDevice;
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalDeviceControl;
 
@@ -148,6 +196,10 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath) 
         DriverObject->MajorFunction[i] = DispatchPassThrough;
 
     DriverObject->DriverUnload = DriverUnload;
+
+    UNICODE_STRING usDosDeviceName;
+    RtlInitUnicodeString(&usDosDeviceName, L"\\DosDevices\\MobinogiAutoClick");
+    IoDeleteSymbolicLink(&usDosDeviceName);
 
     return STATUS_SUCCESS;
 }

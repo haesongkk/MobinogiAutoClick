@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{4E85E5A8-8A5B-DFE3-BF0B-6A4B25BB0C98}</ProjectGuid>
+    <ProjectGuid>{05758F7B-6983-4E9E-02E9-762176F7C5B0}</ProjectGuid>
     <TemplateGuid>{1bc93793-694f-48fe-9372-81e2b05556fd}</TemplateGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
     <Configuration>Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">x64</Platform>
-    <RootNamespace>MobinogiAutoClick</RootNamespace>
+    <RootNamespace>MouseDriver</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -43,6 +43,10 @@
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>KMDF</DriverType>
     <DriverTargetPlatform>Universal</DriverTargetPlatform>
+    <OutDir>$(ProjectDir)</OutDir>
+    <IntDir>$(ProjectDir)temp\</IntDir>
+    <!-- 중간파일은 임시 폴더로 -->
+    <TargetName>MouseDriver</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <TargetVersion>Windows10</TargetVersion>
@@ -101,17 +105,13 @@
     </DriverSign>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Inf Include="MobinogiAutoClick.inf" />
+    <Inf Include="MouseDriver.inf" />
   </ItemGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MobinogiAutoClick.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="end.bat" />
-    <None Include="start.bat" />
+    <ClCompile Include="MouseDriver.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
