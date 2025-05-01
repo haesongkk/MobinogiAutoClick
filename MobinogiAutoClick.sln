@@ -3,45 +3,24 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClickMacro", "ClickMacro\ClickMacro.vcxproj", "{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MouseDriver", "MouseDriver\MouseDriver.vcxproj", "{05758F7B-6983-4E9E-02E9-762176F7C5B0}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DriverCertificates", "DriverCertificates", "{2A3A057F-5D22-31FD-628C-DF5EF75AEF1E}"
-	ProjectSection(SolutionItems) = preProject
-		DriverCertificates\createCert.bat = DriverCertificates\createCert.bat
-		DriverCertificates\createCert.ps1 = DriverCertificates\createCert.ps1
-		DriverCertificates\signDriver.bat = DriverCertificates\signDriver.bat
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MobinogiAutoClick", "MobinogiAutoClick.vcxproj", "{9CF9D71C-9443-4CD0-A246-D0DC557479F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|ARM64 = Debug|ARM64
 		Debug|x64 = Debug|x64
-		Release|ARM64 = Release|ARM64
+		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}.Debug|ARM64.ActiveCfg = Debug|x64
-		{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}.Debug|ARM64.Build.0 = Debug|x64
-		{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}.Debug|x64.ActiveCfg = Debug|x64
-		{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}.Debug|x64.Build.0 = Debug|x64
-		{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}.Release|ARM64.ActiveCfg = Release|x64
-		{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}.Release|ARM64.Build.0 = Release|x64
-		{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}.Release|x64.ActiveCfg = Release|x64
-		{903B3AEC-5FE6-4DB3-85E2-FCE6758C6439}.Release|x64.Build.0 = Release|x64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Debug|ARM64.Build.0 = Debug|ARM64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Debug|ARM64.Deploy.0 = Debug|ARM64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Debug|x64.ActiveCfg = Debug|x64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Debug|x64.Build.0 = Debug|x64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Debug|x64.Deploy.0 = Debug|x64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Release|ARM64.ActiveCfg = Release|ARM64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Release|ARM64.Build.0 = Release|ARM64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Release|ARM64.Deploy.0 = Release|ARM64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Release|x64.ActiveCfg = Release|x64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Release|x64.Build.0 = Release|x64
-		{05758F7B-6983-4E9E-02E9-762176F7C5B0}.Release|x64.Deploy.0 = Release|x64
+		{9CF9D71C-9443-4CD0-A246-D0DC557479F8}.Debug|x64.ActiveCfg = Debug|x64
+		{9CF9D71C-9443-4CD0-A246-D0DC557479F8}.Debug|x64.Build.0 = Debug|x64
+		{9CF9D71C-9443-4CD0-A246-D0DC557479F8}.Debug|x86.ActiveCfg = Debug|Win32
+		{9CF9D71C-9443-4CD0-A246-D0DC557479F8}.Debug|x86.Build.0 = Debug|Win32
+		{9CF9D71C-9443-4CD0-A246-D0DC557479F8}.Release|x64.ActiveCfg = Release|x64
+		{9CF9D71C-9443-4CD0-A246-D0DC557479F8}.Release|x64.Build.0 = Release|x64
+		{9CF9D71C-9443-4CD0-A246-D0DC557479F8}.Release|x86.ActiveCfg = Release|Win32
+		{9CF9D71C-9443-4CD0-A246-D0DC557479F8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
